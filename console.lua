@@ -110,6 +110,41 @@ function console.getInputValue(input)
 
 end
 
+function getLines(text)
+
+	-- adapted from http://lua-users.org/wiki/SplitJoin
+
+	local lines = {} 
+
+	local pattern = "(.-)\n"
+	local lastEnd = 1
+	local s, e, line = text:find(pattern, 1)
+
+	while s do
+
+		if (s ~= 1 or line ~= "") then
+
+			table.insert(lines, line)
+
+		end
+
+		lastEnd = e + 1
+
+		s, e, line = text:find(pattern, lastEnd)
+
+	end
+
+	if (lastEnd <= #text) then
+
+		line = text:sub(lastEnd)
+		table.insert(lines, line)
+
+	end
+
+	return lines
+
+end
+
 function console.addText(input)
 
 	console.text.trueText = console.text.trueText .. input
@@ -146,29 +181,6 @@ function console.addText(input)
 		end
 
 	end
-
-end
-
-function getLines(text)
-
-	local lines = {}
-	local firstLine = nil
-
-	-- get first line
-	string.gsub(text, "(.-)\n", function(line) firstLine = line end, 1)
-	
-	if (not firstLine) then 
-
-		firstLine = text
-
-	end
-
-	table.insert(lines, firstLine)
-
-	-- get subsequent lines
-	string.gsub(text, "\n(.*)", function(line) table.insert(lines, line) end)
-
-	return lines
 
 end
 
