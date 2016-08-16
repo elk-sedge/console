@@ -110,15 +110,15 @@ function console.getInputValue(input)
 
 end
 
-function getLines(text)
+function splitString(text, pattern)
 
 	-- adapted from http://lua-users.org/wiki/SplitJoin
 
 	local lines = {} 
 
-	local pattern = "(.-)\n"
+	local pat = "(.-)" .. pattern
 	local lastEnd = 1
-	local s, e, line = text:find(pattern, 1)
+	local s, e, line = text:find(pat, 1)
 
 	while s do
 
@@ -130,7 +130,7 @@ function getLines(text)
 
 		lastEnd = e + 1
 
-		s, e, line = text:find(pattern, lastEnd)
+		s, e, line = text:find(pat, lastEnd)
 
 	end
 
@@ -145,38 +145,58 @@ function getLines(text)
 
 end
 
+function getLines(text)
+
+	return splitString(text, "\n")
+
+end
+
+function getWords(text)
+
+	return splitString(text, "%s")
+
+end
+
 function console.addText(input)
 
 	console.text.trueText = console.text.trueText .. input
 	console.text.displayText = console.text.displayText .. input
 
-	local lastLine = getLastLine(console.text.displayText)
+	local lines = getLines(console.text.displayText)
+
+	local lastLine = lines[#lines]
 	local lineWidth = console.graphics.font:getWidth(lastLine)
 
 	if (lineWidth > console.dimensions.w) then
 
-		local lastWord, s, e = getLastWord(console.text.displayText)
+		local lastLineWords = getWords(lines[#lines])
+		local lastWord = lastLineWords[#lastLineWords]
 
-		if (lastWord == "§") then
+		if (#lastLineWords > 1) then 
 
-			console.text.displayText = console.text.displayText .. "\n"
+			-- move last word to next line
+			table.remove(lastLineWords, #lastLineWords)
+			table.remove(lines, #lines)
+
+			table.insert(lines, table.concat(lastLineWords, " "))
+			table.insert(lines, lastWord)
+
+			console.text.displayText = table.concat(lines, "\n")
 
 		else
 
-			if (s > 1) then
+			-- wrap last word to next line
+			local lastWordMinusLastChar = lastWord:sub(1, -2)
+			local lastWordLastChar = string.sub(lastWord, #lastWord)
 
-				-- add last word to next line
-				local textMinusLastWord = string.sub(console.text.displayText, 1, s - 1)
-				console.text.displayText = textMinusLastWord .. "\n" .. lastWord
+			table.remove(lastLineWords, #lastLineWords)
+			table.remove(lines, #lines)
 
-			else
+			table.insert(lastLineWords, lastWordMinusLastChar)			
+			table.insert(lines, table.concat(lastLineWords, " "))
+			table.insert(lines, lastWordLastChar)
 
-				-- wrap word to next line
-				local lastCharacter = string.sub(console.text.displayText, #console.text.displayText)
-				local textMinusLastCharacter = string.sub(console.text.displayText, 1, #console.text.displayText - 1)
-				console.text.displayText = textMinusLastCharacter .. "\n" .. lastCharacter
-
-			end
+			console.text.displayText = table.concat(lines, "\n")
 
 		end
 
@@ -192,82 +212,8 @@ function console.performCommand(command)
 		console.text.displayText = console.text.displayText:sub(1, -2)
 
 		-- if space becomes available on previous line for last word, move it
-		local lineCount = getLineCount(console.text.displayText)
-		local lastLine = getLastLine(console.text.displayText)
-		local lineWidth = console.graphics.font:getWidth(lastLine)
-		local prevLineSpace = getPrevLineSpace(console.text.displayText)
-
-		if (lineCount > 1 and lineWidth < prevLineSpace) then
-
-			-- remove last occurrence of \n in previous line
-			-- console.text.displayText = string.gsub(console.text.displayText, "\n", "$", 1)
-
-		end
 
 	end
-
-end
-
-function getLastLine(text)
-
-	local s, e = string.find(text, "[^\n]*$")
-	local lastLine = string.sub(text, s, e)
-
-	return lastLine, s, e
-
-end
-
-function getLastWord(text)
-
-	local s, e, p = 0, 0, 0
-	local lastWord = ""
-
-	while (e < #text) do 
-
-		s, e = string.find(text, "%S+$", p) -- ignore \n characters?
-
-		if (s) then
-
-			lastWord = string.sub(text, s, e)
-			p = e + 1
-
-		else
-
-			lastWord = "§"
-			s, e = #text, #text
-			break
-
-		end
-
-	end
-
-	return lastWord, s, e
-
-end
-
-function getPrevLineSpace(text)
-
-	local prevLine = getPrevLine(text)
-	local prevLineSpace = console.dimensions.w - console.graphics.font:getWidth(prevLine)
-
-	return prevLineSpace
-
-end
-
-function getPrevLine(text)
-
-	local lastLine, s, e = getLastLine(text)
-	local prevLine = getLastLine(string.sub(text, 1, s - 2)) -- -2 removes line-break
-
-	return prevLine, s, e
-
-end
-
-function getLineCount(text)
-
-	local _, count = string.gsub(text, "\n", " ")
-
-	return count + 1
 
 end
 
