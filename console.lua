@@ -19,7 +19,7 @@ console.input =
 		["a"] = "a", ["b"] = "b", ["c"] = "c", ["d"] = "d", ["e"] = "e", ["f"] = "f", ["g"] = "g", ["h"] = "h",
 		["i"] = "i", ["j"] = "j", ["k"] = "k", ["l"] = "l", ["m"] = "m", ["n"] = "n", ["o"] = "o", ["p"] = "p",
 		["q"] = "q", ["r"] = "r", ["s"] = "s", ["t"] = "t", ["u"] = "u", ["v"] = "v", ["w"] = "w", ["x"] = "x",
-		["y"] = "y", ["z"] = "z", ["."] = ".", [","] = ",", ["space"] = " "
+		["y"] = "y", ["z"] = "z", ["."] = ".", [","] = ",", ["-"] = "-", ["space"] = " "
 	},
 	commands = 
 	{
@@ -35,6 +35,12 @@ console.text =
 {
 	trueText = "",
 	displayText = ""
+}
+
+console.cursor = 
+{
+	col = 1,
+	row = 1
 }
 
 function console.init(w, h, fontSize, fontPath)
@@ -255,7 +261,58 @@ end
 
 function console.moveCursor(direction)
 
-	print(direction)
+	local cursor = console.cursor
+	local lines = getLines(console.text.displayText)
+
+	if (direction == "up") then
+
+		if (cursor.row > 1) then
+
+			cursor.row = cursor.row - 1
+
+		end
+
+	elseif (direction == "down") then
+
+		if (cursor.row < #lines) then
+
+			cursor.row = cursor.row + 1
+
+			local cursorLine = lines[cursor.row]
+
+			if (cursor.col > #cursorLines + 1) then
+
+				cursor.col = #cursorLine + 1
+
+			end
+
+		end
+
+	elseif (direction == "left") then
+
+		if (cursor.col > 1) then
+
+			cursor.col = cursor.col - 1
+
+		end
+
+	elseif (direction == "right") then
+
+		local cursorLine = lines[cursor.row]
+
+		if (cursorLine) then
+
+			if (cursor.col < #cursorLine) then
+
+				cursor.col = cursor.col + 1
+
+			end
+
+		end
+
+	end
+
+	print(cursor.col, cursor.row)
 
 end
 
