@@ -212,6 +212,32 @@ function console.performCommand(command)
 		console.text.displayText = console.text.displayText:sub(1, -2)
 
 		-- if space becomes available on previous line for last word, move it
+		local lines = getLines(console.text.displayText)
+		local previousLine = lines[#lines - 1]
+
+		if (previousLine) then
+
+			local lastLineWords = getWords(lines[#lines])
+			local currentWord = lastLineWords[#lastLineWords]
+
+			local wordWidth = console.graphics.font:getWidth(currentWord)
+			local previousLineSpace = console.dimensions.w - console.graphics.font:getWidth(previousLine)
+
+			if (wordWidth < previousLineSpace) then
+
+				local previousLineWords = getWords(lines[#lines - 1])
+
+				table.remove(lines, #lines)
+				table.remove(lines, #lines)
+
+				table.insert(previousLineWords, currentWord)
+				table.insert(lines, table.concat(previousLineWords, " "))
+
+				console.text.displayText = table.concat(lines, "\n")
+
+			end
+
+		end
 
 	end
 
