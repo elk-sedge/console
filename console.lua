@@ -23,7 +23,11 @@ console.input =
 	},
 	commands = 
 	{
-		["backspace"] = "backspace"
+		["backspace"] = function() console.backspace() end, 
+		["up"] = function() console.moveCursor("up") end, 
+		["down"] = function() console.moveCursor("down") end, 
+		["left"] = function() console.moveCursor("left") end, 
+		["right"] = function() console.moveCursor("right") end
 	}
 }
 
@@ -80,7 +84,7 @@ function console.doInput(input)
 
 		elseif (inputTypeKey == "commands") then
 
-			console.performCommand(inputValue)
+			inputValue()
 
 		end
 
@@ -204,42 +208,44 @@ function console.addText(input)
 
 end
 
-function console.performCommand(command)
+function console.backspace()
 
-	if (command == "backspace") then
+	console.text.trueText = console.text.trueText:sub(1, -2)
+	console.text.displayText = console.text.displayText:sub(1, -2)
 
-		console.text.trueText = console.text.trueText:sub(1, -2)
-		console.text.displayText = console.text.displayText:sub(1, -2)
+	-- if space becomes available on previous line for last word, move it
+	local lines = getLines(console.text.displayText)
+	local previousLine = lines[#lines - 1]
 
-		-- if space becomes available on previous line for last word, move it
-		local lines = getLines(console.text.displayText)
-		local previousLine = lines[#lines - 1]
+	if (previousLine) then
 
-		if (previousLine) then
+		local lastLineWords = getWords(lines[#lines])
+		local currentWord = lastLineWords[#lastLineWords]
 
-			local lastLineWords = getWords(lines[#lines])
-			local currentWord = lastLineWords[#lastLineWords]
+		local wordWidth = console.graphics.font:getWidth(currentWord)
+		local previousLineSpace = console.dimensions.w - console.graphics.font:getWidth(previousLine)
 
-			local wordWidth = console.graphics.font:getWidth(currentWord)
-			local previousLineSpace = console.dimensions.w - console.graphics.font:getWidth(previousLine)
+		if (wordWidth < previousLineSpace) then
 
-			if (wordWidth < previousLineSpace) then
+			local previousLineWords = getWords(lines[#lines - 1])
 
-				local previousLineWords = getWords(lines[#lines - 1])
+			table.remove(lines, #lines)
+			table.remove(lines, #lines)
 
-				table.remove(lines, #lines)
-				table.remove(lines, #lines)
+			table.insert(previousLineWords, currentWord)
+			table.insert(lines, table.concat(previousLineWords, " "))
 
-				table.insert(previousLineWords, currentWord)
-				table.insert(lines, table.concat(previousLineWords, " "))
-
-				console.text.displayText = table.concat(lines, "\n")
-
-			end
+			console.text.displayText = table.concat(lines, "\n")
 
 		end
 
 	end
+
+end
+
+function console.moveCursor(direction)
+
+	print(direction)
 
 end
 
