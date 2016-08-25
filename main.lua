@@ -12,13 +12,13 @@ function love.load()
 
 	love.window.setMode(screenWidth, screenHeight)
 
-	console.init(200, 100, 20, "Early GameBoy.ttf")
+	console.init(400, 200, 20, "Early GameBoy.ttf")
 
 end
 
 function love.draw()
 
-	love.graphics.draw(console.getCanvas(), 0, 0)
+	love.graphics.draw(console.getCanvas(), 200, 200)
 
 end
 

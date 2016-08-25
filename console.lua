@@ -3,7 +3,7 @@ local console = {}
 console.dimensions = 
 {
 	w, h,
-	fontSize
+	fontSize, fontHeight
 }
 
 console.graphics = 
@@ -39,18 +39,19 @@ console.text =
 
 console.cursor = 
 {
-	col = 1,
-	row = 1
+	col = 1, row = 1,
+	x = 0, y = 0
 }
 
 function console.init(w, h, fontSize, fontPath)
 
+	console.graphics.canvas = love.graphics.newCanvas(w, h)
+	console.graphics.font = love.graphics.newFont(fontPath, fontSize)
+
 	console.dimensions.w = w
 	console.dimensions.h = h
 	console.dimensions.fontSize = fontSize
-
-	console.graphics.canvas = love.graphics.newCanvas(w, h)
-	console.graphics.font = love.graphics.newFont(fontPath, fontSize)
+	console.dimensions.fontHeight = console.graphics.font:getHeight("a")
 
 	console.draw()
 
@@ -67,6 +68,9 @@ function console.draw()
 	-- draw text
 	love.graphics.setFont(console.graphics.font)
 	love.graphics.print(console.text.displayText, 0, 0)
+
+	-- draw cursor
+	love.graphics.line(console.cursor.x, console.cursor.y, console.cursor.x, console.cursor.y + console.dimensions.fontHeight)
 
 	love.graphics.setCanvas()
 
@@ -172,6 +176,8 @@ function console.addText(input)
 	console.text.trueText = console.text.trueText .. input
 	console.text.displayText = console.text.displayText .. input
 
+	console.moveCursor("right")
+
 	local lines = getLines(console.text.displayText)
 
 	local lastLine = lines[#lines]
@@ -210,6 +216,8 @@ function console.addText(input)
 
 		end
 
+		console.moveCursor("down")
+
 	end
 
 end
@@ -218,6 +226,8 @@ function console.backspace()
 
 	console.text.trueText = console.text.trueText:sub(1, -2)
 	console.text.displayText = console.text.displayText:sub(1, -2)
+
+	console.moveCursor("left")
 
 	-- if space becomes available on previous line for last word, move it
 	local lines = getLines(console.text.displayText)
@@ -249,6 +259,16 @@ function console.backspace()
 
 					console.text.displayText = table.concat(lines, "\n")
 
+					console.moveCursor("up")
+
+					local moveRightPossible = console.moveCursor("right")
+
+					repeat
+
+						moveRightPossible = console.moveCursor("right")
+
+					until not moveRightPossible
+
 				end
 
 			end
@@ -264,11 +284,14 @@ function console.moveCursor(direction)
 	local cursor = console.cursor
 	local lines = getLines(console.text.displayText)
 
+	local moved = false
+
 	if (direction == "up") then
 
 		if (cursor.row > 1) then
 
 			cursor.row = cursor.row - 1
+			moved = true
 
 		end
 
@@ -280,11 +303,13 @@ function console.moveCursor(direction)
 
 			local cursorLine = lines[cursor.row]
 
-			if (cursor.col > #cursorLines + 1) then
+			if (cursor.col > #cursorLine) then
 
-				cursor.col = #cursorLine + 1
+				cursor.col = #cursorLine
 
 			end
+
+			moved = true
 
 		end
 
@@ -293,6 +318,7 @@ function console.moveCursor(direction)
 		if (cursor.col > 1) then
 
 			cursor.col = cursor.col - 1
+			moved = true
 
 		end
 
@@ -305,6 +331,7 @@ function console.moveCursor(direction)
 			if (cursor.col < #cursorLine) then
 
 				cursor.col = cursor.col + 1
+				moved = true
 
 			end
 
@@ -312,7 +339,21 @@ function console.moveCursor(direction)
 
 	end
 
-	print(cursor.col, cursor.row)
+	local cursorRow = lines[cursor.row]
+
+	if (cursorRow) then
+
+		cursor.x = console.graphics.font:getWidth(cursorRow:sub(1, cursor.col))
+
+	else
+
+		cursor.x = 0
+
+	end
+
+	cursor.y = console.dimensions.fontHeight * (cursor.row - 1)
+
+	return moved
 
 end
 
