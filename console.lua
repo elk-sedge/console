@@ -259,15 +259,7 @@ function console.backspace()
 
 					console.text.displayText = table.concat(lines, "\n")
 
-					console.moveCursor("up")
-
-					local moveRightPossible = console.moveCursor("right")
-
-					repeat
-
-						moveRightPossible = console.moveCursor("right")
-
-					until not moveRightPossible
+					console.moveCursorToEndOfPreviousLine()
 
 				end
 
@@ -354,6 +346,20 @@ function console.moveCursor(direction)
 	cursor.y = console.dimensions.fontHeight * (cursor.row - 1)
 
 	return moved
+
+end
+
+function console.moveCursorToEndOfPreviousLine()
+
+	console.moveCursor("up")
+
+	local moveRightPossible = console.moveCursor("right")
+
+	repeat
+
+		moveRightPossible = console.moveCursor("right")
+
+	until not moveRightPossible
 
 end
 
