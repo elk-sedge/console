@@ -209,7 +209,19 @@ function console.performCommand(command)
 	if (command == "backspace") then
 
 		console.text.trueText = console.text.trueText:sub(1, -2)
-		console.text.displayText = console.text.displayText:sub(1, -2)
+
+		-- if last element is a newline/other non-character, remove two elements
+		local lastCharacter = console.text.displayText:sub(#console.text.displayText, #console.text.displayText)
+
+		if (not console.isCharacter(lastCharacter)) then
+
+			console.text.displayText = console.text.displayText:sub(1, -3)
+
+		else
+
+			console.text.displayText = console.text.displayText:sub(1, -2)
+
+		end
 
 		-- if space becomes available on previous line for last word, move it
 		local lines = getLines(console.text.displayText)
@@ -250,6 +262,22 @@ function console.performCommand(command)
 		end
 
 	end
+
+end
+
+function console.isCharacter(element)
+
+	for _, character in pairs(console.input.characters) do
+
+		if (element == character) then
+
+			return true
+
+		end
+
+	end
+
+	return false
 
 end
 
